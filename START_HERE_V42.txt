@@ -1,0 +1,32 @@
+TA-STORE-VN V42 — FULL WEBSITE + ADMIN LOGIN + API
+
+QUAN TRONG:
+- GitHub Pages (*.github.io) chi host HTML tinh, KHONG chay server.js.
+- Muon dang nhap Admin va API hoat dong, phai deploy TOAN BO thu muc nay len Railway.
+- Sau deploy, mo domain *.up.railway.app do Railway cap. Khong tiep tuc mo URL github.io de vao Admin.
+
+DEPLOY NHANH:
+1. Tao GitHub repository Private.
+2. Upload TOAN BO NOI DUNG trong ZIP nay vao THU MUC GOC cua repository.
+   Dockerfile, railway.json, server.js phai nam ngay o goc repository.
+3. Railway > New Project > Deploy from GitHub Repo > chon repository.
+4. Trong service Railway, tao Volume voi Mount Path: /persist.
+5. Trong Variables, them:
+   NODE_ENV=production
+   TA_STORE_HOST=0.0.0.0
+   TA_STORE_DATA_DIR=/persist/data
+   TA_STORE_CONFIG_FILE=/persist/config.json
+   TA_STORE_ADMIN_USERNAME=ADMIN
+   TA_STORE_ADMIN_PASSWORD=<tu dat chuoi ngau nhien it nhat 16 ky tu>
+6. Deploy lai neu Railway chua tu deploy sau khi them Variables.
+7. Settings > Networking > Generate Domain.
+8. Mo https://TEN-APP.up.railway.app/api/health. Phai thay JSON co "ok":true.
+9. Mo https://TEN-APP.up.railway.app/ va dang nhap bang username/password da dat o buoc 5.
+
+KHONG:
+- Khong commit file .env co mat khau that.
+- Khong gui mat khau Admin, config.json, data/store.json hoac Cloudflare API token cho nguoi khac.
+- Khong su dung tai khoan/mat khau cu cua GitHub Pages de thu API; GitHub Pages khong co backend.
+
+Kiem tra API:
+- Chay CHECK_API.bat tren Windows va dan URL Railway khi duoc hoi.

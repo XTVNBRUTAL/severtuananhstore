@@ -1,0 +1,69 @@
+services:
+  tunnel-runtime-init:
+    image: alpine:3.20
+    container_name: tuan-anh-store-tunnel-init
+    user: "0:0"
+    command: ["sh", "-c", "mkdir -p /run/tunnel && chown -R 1000:1000 /run/tunnel && chmod 700 /run/tunnel"]
+    volumes:
+      - tunnel_runtime:/run/tunnel
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tuan-anh-store-app
+    restart: unless-stopped
+    depends_on:
+      tunnel-runtime-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      CLOUDFLARED_BIN: /usr/local/bin/cloudflared
+      TA_STORE_HOST: 0.0.0.0
+      TA_STORE_PORT: "3000"
+      TA_STORE_DATA_DIR: /persist/data
+      TA_STORE_CONFIG_FILE: /persist/config.json
+      TA_STORE_PUBLIC_URL: ${TA_STORE_PUBLIC_URL:-}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_API_TOKEN:-}
+      TA_STORE_TUNNEL_READY_URL: http://cloudflared:2000/ready
+      TA_STORE_TUNNEL_ORIGIN: ${TA_STORE_TUNNEL_ORIGIN:-http://app:3000}
+      CLOUDFLARE_API_TOKEN_FILE: /persist/data/cloudflare-api-token
+      CLOUDFLARE_TUNNEL_TOKEN_FILE: /run/tunnel/tunnel-token
+      CLOUDFLARE_TUNNEL_NAME: ${CLOUDFLARE_TUNNEL_NAME:-tuan-anh-store-public}
+      TA_STORE_ADMIN_USERNAME: ${TA_STORE_ADMIN_USERNAME:-ADMIN}
+      TA_STORE_ADMIN_PASSWORD: ${TA_STORE_ADMIN_PASSWORD:?Set a strong TA_STORE_ADMIN_PASSWORD in .env}
+    volumes:
+      - ./persist:/persist
+      - tunnel_runtime:/run/tunnel
+    ports:
+      - "${TA_STORE_LOOPBACK_BIND:-127.0.0.1}:${TA_STORE_LOOPBACK_PORT:-3000}:3000"
+    expose:
+      - "3000"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://127.0.0.1:3000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  cloudflared:
+    build:
+      context: .
+      dockerfile: Dockerfile.cloudflared
+    container_name: tuan-anh-store-tunnel
+    restart: unless-stopped
+    volumes:
+      - tunnel_runtime:/run/tunnel:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    expose:
+      - "2000"
+
+volumes:
+  tunnel_runtime:

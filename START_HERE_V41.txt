@@ -1,0 +1,8 @@
+TA-STORE-VN V41
+
+LỖI ĐĂNG NHẬP TRÊN github.io:
+GitHub Pages chỉ host giao diện tĩnh, không chạy server.js/API.
+Deploy TOÀN BỘ project này lên Railway và dùng domain *.up.railway.app làm link chính.
+
+Đọc DEPLOY_RAILWAY_V41_VI.md để làm theo từng bước.
+Quan trọng: tạo Volume mount tại /persist và đặt TA_STORE_ADMIN_PASSWORD tối thiểu 16 ký tự.

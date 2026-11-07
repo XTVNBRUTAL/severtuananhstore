@@ -1,0 +1,16 @@
+# The upstream cloudflared image is intentionally distroless and has no shell.
+# Copy its statically-linked binary into a small Debian image so we can wait
+# for the Admin-created token file before starting the persistent connector.
+FROM cloudflare/cloudflared:latest AS cloudflared_upstream
+
+FROM debian:bookworm-slim
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && install -d -o 1000 -g 1000 -m 0700 /run/tunnel
+COPY --from=cloudflared_upstream /usr/local/bin/cloudflared /usr/local/bin/cloudflared
+COPY wait-and-run-cloudflared.sh /usr/local/bin/wait-and-run-cloudflared.sh
+RUN chmod 0755 /usr/local/bin/cloudflared /usr/local/bin/wait-and-run-cloudflared.sh
+USER 1000:1000
+ENTRYPOINT ["/usr/local/bin/wait-and-run-cloudflared.sh"]

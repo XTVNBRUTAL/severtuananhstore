@@ -1,0 +1,9 @@
+config.json
+data/store.json
+*.tmp
+.runtime/
+PUBLIC_URL.txt
+.env
+persist/
+
+data/activity.json
